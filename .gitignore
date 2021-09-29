@@ -5,3 +5,4 @@ target/
 .idea/
 **.DS_Store**
 *.prefs
+data/project-1/runwayBIG.sqlite3
