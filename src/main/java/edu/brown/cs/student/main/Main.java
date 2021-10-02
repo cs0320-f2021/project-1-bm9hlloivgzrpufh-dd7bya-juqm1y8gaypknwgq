@@ -77,6 +77,9 @@ public final class Main {
       List<StarDistPair> distList = new LinkedList<StarDistPair>();
       KDTree tree = null;
       HashMap<Integer, dNode> nodesMap = new HashMap<Integer, dNode>();
+
+
+
       while ((input = br.readLine()) != null) {
         try {
           input = input.trim();
@@ -269,9 +272,10 @@ public final class Main {
 
 
           //Project 1 starts here
-          //orm component here:
+          //ORM component here:
+
           Class.forName("org.sqlite.JDBC");
-          String urlToDB = "jdbc:sqlite:" + "<path/to/db>.sqlite3";
+          String urlToDB = "jdbc:sqlite:" + "data/project-1/emptyEditable_copy.sqlite3";
           Connection conn = DriverManager.getConnection(urlToDB);
           Statement stat = conn.createStatement();
           stat.executeUpdate("PRAGMA foreign_keys=ON;");
@@ -279,13 +283,24 @@ public final class Main {
 
           if (arguments[0].equals("INSERT")){
             //Rent test = new Rent("small", 0, 135, 4, "some_event", "dress", "huge", 4);
-            String sqlStatement = dataBot.insert(arguments[1]);
+            //System.out.println(dataBot.insert(test));
+            String sqlStatement = dataBot.insert(args[1]);
             PreparedStatement prep = conn.prepareStatement(sqlStatement);
-            //prep.setString(...,...) if needed
-            //prep.addBatch();
-            //prep.executeBatch();
-            System.out.println("");
+            int count = 1;
+            for (Object entry : dataBot.getValues(arguments[1], dataBot.getFields(arguments[1]))){
+              if (entry instanceof Integer){
+                prep.setInt(count, (Integer)entry);
+                count = count + 1;
+              }
+              else if (entry instanceof String){
+                prep.setString(count, (String)entry);
+                count = count + 1;
+              }
+            }
+            prep.addBatch();
+            prep.executeBatch();
           }
+
           else if (arguments[0].equals("DELETE")){
             String sqlStatement = dataBot.delete(arguments[1]);
             PreparedStatement prep = conn.prepareStatement(sqlStatement);

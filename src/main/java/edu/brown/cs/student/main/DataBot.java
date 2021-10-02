@@ -36,7 +36,16 @@ public class DataBot {
   }
 
   public String insert(Object object){
-    return "";
+    Field[] fields = getFields(object);
+    int numFields = fields.length;
+    String sqlStatement = "INSERT INTO " + getType(object) + " VALUES (";
+    int counter = 0;
+    while (counter < (numFields - 1)){
+      sqlStatement = sqlStatement + "?, ";
+      counter = counter + 1;
+    }
+    sqlStatement = sqlStatement + "?);";
+    return sqlStatement;
   }
 
   public String delete(Object object){
