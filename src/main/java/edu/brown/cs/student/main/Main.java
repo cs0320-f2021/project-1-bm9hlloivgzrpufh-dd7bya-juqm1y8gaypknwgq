@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -274,17 +275,15 @@ public final class Main {
           //Project 1 starts here
           //ORM component here:
 
-          Class.forName("org.sqlite.JDBC");
-          String urlToDB = "jdbc:sqlite:" + "data/project-1/emptyEditable_copy.sqlite3";
-          Connection conn = DriverManager.getConnection(urlToDB);
-          Statement stat = conn.createStatement();
-          stat.executeUpdate("PRAGMA foreign_keys=ON;");
-          DataBot dataBot = new DataBot();
 
+          DataBot dataBot = new DataBot();
+          if (arguments[0].equals("database")) {
+            DataBot.loadDb(arguments[1]);
+          }
           if (arguments[0].equals("INSERT")){
             //Rent test = new Rent("small", 0, 135, 4, "some_event", "dress", "huge", 4);
             //System.out.println(dataBot.insert(test));
-            String sqlStatement = dataBot.insert(args[1]);
+            String sqlStatement = dataBot.insert(arguments[1]);
             PreparedStatement prep = conn.prepareStatement(sqlStatement);
             int count = 1;
             for (Object entry : dataBot.getValues(arguments[1], dataBot.getFields(arguments[1]))){
@@ -319,6 +318,8 @@ public final class Main {
           }
 
           else if (arguments[0].equals("SELECT")){
+            List<?> objLs = dataBot.select(arguments[1], Arrays.asList(arguments).subList(2,
+                arguments.length));
             System.out.println("");
           }
           else if (arguments[0].equals("UPDATE")){
