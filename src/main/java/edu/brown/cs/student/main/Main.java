@@ -268,19 +268,64 @@ public final class Main {
           }
 
 
-
-
           //Project 1 starts here
+          //orm component here:
+          Class.forName("org.sqlite.JDBC");
+          String urlToDB = "jdbc:sqlite:" + "<path/to/db>.sqlite3";
+          Connection conn = DriverManager.getConnection(urlToDB);
+          Statement stat = conn.createStatement();
+          stat.executeUpdate("PRAGMA foreign_keys=ON;");
+          DataBot dataBot = new DataBot();
+
+          if (arguments[0].equals("INSERT")){
+            //Rent test = new Rent("small", 0, 135, 4, "some_event", "dress", "huge", 4);
+            String sqlStatement = dataBot.insert(arguments[1]);
+            PreparedStatement prep = conn.prepareStatement(sqlStatement);
+            //prep.setString(...,...) if needed
+            //prep.addBatch();
+            //prep.executeBatch();
+            System.out.println("");
+          }
+          else if (arguments[0].equals("DELETE")){
+            String sqlStatement = dataBot.delete(arguments[1]);
+            PreparedStatement prep = conn.prepareStatement(sqlStatement);
+            int count = 1;
+            for (Object entry : dataBot.getValues(arguments[1], dataBot.getFields(arguments[1]))){
+              if (entry instanceof Integer){
+                prep.setInt(count, (Integer)entry);
+                count = count + 1;
+              }
+              else if (entry instanceof String){
+                prep.setString(count, (String)entry);
+                count = count + 1;
+              }
+            }
+            prep.executeUpdate();
+          }
+
+          else if (arguments[0].equals("SELECT")){
+            System.out.println("");
+          }
+          else if (arguments[0].equals("UPDATE")){
+            System.out.println("");
+          }
+          else if (arguments[0].equals("RAWQUERY")){
+            System.out.println("");
+          }
+
+
+
+
           // users
           else if (arguments[0].equals("users")) {
 
             ArrayList<dNode> nodeList = new ArrayList<dNode>();
 
-            Class.forName("org.sqlite.JDBC");
-            String urlToDB = "jdbc:sqlite:" + arguments[1];
-            Connection conn = DriverManager.getConnection(urlToDB);
-            Statement stat = conn.createStatement();
-            stat.executeUpdate("PRAGMA foreign_keys=ON;");
+            //Class.forName("org.sqlite.JDBC");
+            //String urlToDB = "jdbc:sqlite:" + arguments[1];
+            //Connection conn = DriverManager.getConnection(urlToDB);
+            //Statement stat = conn.createStatement();
+            //stat.executeUpdate("PRAGMA foreign_keys=ON;");
 
             PreparedStatement prep = conn.prepareStatement(
                 "SELECT user_id, weight, height, age, horoscope FROM users;");
