@@ -336,13 +336,13 @@ public final class Main {
 
             ArrayList<dNode> nodeList = new ArrayList<dNode>();
 
-            //Class.forName("org.sqlite.JDBC");
-            //String urlToDB = "jdbc:sqlite:" + arguments[1];
-            //Connection conn = DriverManager.getConnection(urlToDB);
-            //Statement stat = conn.createStatement();
-            //stat.executeUpdate("PRAGMA foreign_keys=ON;");
+            Class.forName("org.sqlite.JDBC");
+            String urlToDB2 = "jdbc:sqlite:" + arguments[1];
+            Connection conn2 = DriverManager.getConnection(urlToDB2);
+            Statement stat2 = conn2.createStatement();
+            stat2.executeUpdate("PRAGMA foreign_keys=ON;");
 
-            PreparedStatement prep = conn.prepareStatement(
+            PreparedStatement prep = conn2.prepareStatement(
                 "SELECT user_id, weight, height, age, horoscope FROM users;");
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
@@ -361,14 +361,10 @@ public final class Main {
             rs.close();
             conn.close();
 
-            //System.out.println(nodeList);
-
             tree = new KDTree(nodeList.get(0));
             tree.buildTree(nodeList);
 
-            //System.out.println(tree.getRoot().getLeft());
-            //tree.check(0, tree.getRoot());
-            System.out.println("done");
+            System.out.println("done loading data");
           }
           // similar
           else if (arguments[0].equals("similar") || arguments[0].equals("classify")) {
@@ -387,25 +383,10 @@ public final class Main {
 
               tree.search(neighbors, tree.getRoot(), neighborsList, target);
               System.out.println("done searching");
-              /*
-              System.out.println(neighborsList.get(0).getWeight());
-              System.out.println(neighborsList.get(0).getHeight());
-              System.out.println(neighborsList.get(0).getAge());
-              System.out.println(neighborsList.get(1).getWeight());
-              System.out.println(neighborsList.get(1).getHeight());
-              System.out.println(neighborsList.get(1).getAge());
 
-              System.out.println(neighborsList.get(0).getID());
-              System.out.println(neighborsList.get(1).getID());
-              System.out.println(neighborsList.get(2).getID());
-              System.out.println(neighborsList.get(3).getID());
-              System.out.println(neighborsList.get(4).getID());
-               */
-              //System.out.println(neighborsList.size());
               if (arguments[0].equals("similar")) {
                 for (dNode neighbor : neighborsList) {
                   System.out.println(neighbor.getID());
-                  //System.out.println(neighbor.calcDistance(target.get(0), target.get(1), target.get(2)));
                 }
               } else if (arguments[0].equals("classify")) {
                 String[] allSigns = new String[12];
@@ -461,13 +442,7 @@ public final class Main {
               tree.search(neighbors + 1, tree.getRoot(), neighborsList, target);
               neighborsList.remove(0);
               System.out.println("done searching");
-              /*
-              System.out.println(neighborsList.get(0).getID());
-              System.out.println(neighborsList.get(1).getID());
-              System.out.println(neighborsList.get(2).getID());
-              System.out.println(neighborsList.get(3).getID());
-              System.out.println(neighborsList.get(4).getID());
-               */
+
               if (arguments[0].equals("similar")) {
                 for (dNode neighbor : neighborsList) {
                   System.out.println(neighbor.getID());
