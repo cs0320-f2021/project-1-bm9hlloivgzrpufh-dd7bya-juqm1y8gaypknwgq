@@ -1,0 +1,19 @@
+ARGS
+
+INPUT
+classify 5 151944
+OUTPUT
+done searching
+Aries: 1
+Taurus: 1
+Gemini: 0
+Cancer: 0
+Leo: 1
+Virgo: 0
+Libra: 1
+Scorpio: 0
+Sagittarius: 0
+Capricorn: 0
+Aquarius: 1
+Pisces: 0
+END

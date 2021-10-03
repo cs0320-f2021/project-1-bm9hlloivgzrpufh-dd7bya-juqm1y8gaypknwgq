@@ -99,7 +99,6 @@ public class KDTree {
         }
       }
     }
-    //System.out.println(priorityQ);
   }
 
   public int nextDim(int dim) {
@@ -138,9 +137,6 @@ public class KDTree {
 
     if (checkNode == null) {
       return;
-    } else {
-      //System.out.println(checkNode.getWeight());
-      //System.out.println(checkNode.calcDistance(target.get(0), target.get(1), target.get(2)));
     }
 
     if (neighborsList.size() == 0) {
@@ -167,7 +163,6 @@ public class KDTree {
           int index = neighborsList.indexOf(neighbor);
           neighborsList.remove(neighbors - 1);
           neighborsList.add(index, checkNode);
-          //System.out.println("removed a neighbor");
           break;
         }
       }
