@@ -1,6 +1,6 @@
 package edu.brown.cs.student.main;
 
-public class User {
+public class users {
   private int user_id;
   private int weight;
   private String bust_size;
@@ -9,8 +9,8 @@ public class User {
   private String body_type;
   private String horoscope;
 
-  public User(int user_id, int weight, String bust_size, String height, int age, String body_type,
-              String horoscope){
+  public users(int user_id, int weight, String bust_size, String height, int age, String body_type,
+               String horoscope){
     this.user_id = user_id;
     this.weight = weight;
     this.bust_size = bust_size;

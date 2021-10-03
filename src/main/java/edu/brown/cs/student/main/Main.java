@@ -86,6 +86,18 @@ public final class Main {
         try {
           input = input.trim();
           String[] arguments = input.split(" ");
+
+          DataBot dataBot = new DataBot();
+          rent small = new rent("small", 1, 135, 4, "some_event",
+              "dress", "huge", 1);
+          rent fit = new rent("fit", 2, 132, 4, "some_event",
+              "dress", "huge", 2);
+          rent large = new rent("large", 3, 131, 4, "some_event",
+              "dress", "huge", 3);
+          rent delete = new rent("delete", 4, 139, 4, "some_event",
+              "dress", "huge", 4);
+          PrintWriter pw = new PrintWriter(System.out, true);
+
           // add
           if (arguments[0].equals("add")) {
             MathBot bot = new MathBot();
@@ -275,48 +287,36 @@ public final class Main {
           //Project 1 starts here
           //ORM component here:
 
-
-          DataBot dataBot = new DataBot();
-          Rent small = new Rent("small", 1, 135, 4, "some_event",
-              "dress", "huge", 4);
-          Rent fit = new Rent("fit", 2, 135, 4, "some_event",
-              "dress", "huge", 4);
-          Rent large = new Rent("large", 3, 135, 4, "some_event",
-              "dress", "huge", 4);
-          Rent delete = new Rent("delete", 4, 135, 4, "some_event",
-              "dress", "huge", 4);
-          PrintWriter pw = new PrintWriter(System.out, true);
-          if (arguments[0].equals("database")) {
+          else if (arguments[0].equals("database")) {
             DataBot.loadDb(arguments[1]);
             pw.println("database loaded");
           }
-          if (arguments[0].equals("INSERT")) {
-            //System.out.println(dataBot.insert(test))
+          else if (arguments[0].equals("INSERT")) {
             dataBot.insert(small);
             dataBot.insert(fit);
             dataBot.insert(large);
+            dataBot.insert(delete);
             pw.println("inserted");
           }
 
-          if (arguments[0].equals("DELETE")) {
+          else if (arguments[0].equals("DELETE")) {
             dataBot.delete(delete);
             pw.println("deleted");
           }
 
-
-          if (arguments[0].equals("SELECT")) {
+          else if (arguments[0].equals("SELECT")) {
             List<?> objLs = dataBot.select(arguments[1], Arrays.asList(arguments).subList(2,
                 arguments.length));
             int length = objLs.size();
             pw.println(length);
           }
-          if (arguments[0].equals("UPDATE")) {
+          else if (arguments[0].equals("UPDATE")) {
             dataBot.update(small,arguments[1], arguments[2], arguments[3]);
             pw.println("updated");
           }
-          if (arguments[0].equals("RAWQUERY")) {
+          else if (arguments[0].equals("RAWQUERY")) {
             
-            dataBot.rawQuery(sqlStatement);
+            //dataBot.rawQuery(sqlStatement);
             pw.println("rawQuery");
           }
 

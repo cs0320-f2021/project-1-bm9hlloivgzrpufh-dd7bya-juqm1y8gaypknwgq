@@ -25,10 +25,10 @@ public class DataBot {
     try {
       Class.forName("org.sqlite.JDBC");
       String urlToDB = "jdbc:sqlite:" + path;
-      Connection conn = DriverManager.getConnection(urlToDB);
+      conn = DriverManager.getConnection(urlToDB);
       Statement stat = conn.createStatement();
       stat.executeUpdate("PRAGMA foreign_keys=ON;");
-      String[] tablenames = {"user", "rent", "review"};
+      String[] tablenames = {"users", "rent", "reviews"};
       DatabaseMetaData dmd = conn.getMetaData();
       for (String name : tablenames) {
         rs = dmd.getTables(null, null, name, null);
@@ -66,12 +66,13 @@ public class DataBot {
     return fieldNamesString;
   }
 
-  public String[] getValues(Object object, Field[] fieldNames) throws IllegalAccessException {
-    String[] values = new String[fieldNames.length];
+  public Object[] getValues(Object object, Field[] fieldNames) throws IllegalAccessException {
+    Object[] values = new Object[fieldNames.length];
     int counter = 0;
     for (Field field : fieldNames) {
       field.setAccessible(true);
-      values[counter] = field.get(object).toString();
+      Object x = field.get(object); //turn parameter into an object so it can be stored in array
+      values[counter] = x;
       counter++;
     }
     return values;
@@ -94,7 +95,8 @@ public class DataBot {
     }
     sqlStatement = sqlStatement + "?);";
 
-    PreparedStatement prep = conn.prepareStatement(sqlStatement);
+    PreparedStatement prep;
+    prep = conn.prepareStatement(sqlStatement);
     int count = 1;
     for (Object entry : getValues(obj, getFields(obj))) {
       if (entry instanceof Integer) {
