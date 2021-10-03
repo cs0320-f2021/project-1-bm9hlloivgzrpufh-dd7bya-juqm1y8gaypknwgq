@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +47,7 @@ public final class Main {
    *
    * @param args An array of command line arguments
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     new Main(args).run();
   }
 
@@ -55,7 +57,7 @@ public final class Main {
     this.args = args;
   }
 
-  private void run() {
+  private void run() throws IOException {
     // set up parsing of command line flags
     OptionParser parser = new OptionParser();
 
@@ -80,7 +82,6 @@ public final class Main {
       HashMap<Integer, dNode> nodesMap = new HashMap<Integer, dNode>();
 
 
-
       while ((input = br.readLine()) != null) {
         try {
           input = input.trim();
@@ -91,16 +92,16 @@ public final class Main {
             MathBot bot = new MathBot();
             System.out.println(bot.add(Double.parseDouble(arguments[1]),
                 Double.parseDouble(arguments[2])));
-          // subtract
+            // subtract
           } else if (arguments[0].equals("subtract")) {
             MathBot bot = new MathBot();
             System.out.println(bot.subtract(Double.parseDouble(arguments[1]),
                 Double.parseDouble(arguments[2])));
-          // stars
+            // stars
           } else if (arguments[0].equals("stars")) {
             CSVParser parsingMachine = new CSVParser();
             starsList = parsingMachine.parse(arguments[1]);
-          // naive neighbors
+            // naive neighbors
           } else if (arguments[0].equals("naive_neighbors")) {
             distList = new LinkedList<StarDistPair>();
             if (arguments.length == 5) {
@@ -280,56 +281,30 @@ public final class Main {
           if (arguments[0].equals("database")) {
             DataBot.loadDb(arguments[1]);
           }
-          if (arguments[0].equals("INSERT")){
+          if (arguments[0].equals("INSERT")) {
             //Rent test = new Rent("small", 0, 135, 4, "some_event", "dress", "huge", 4);
-            //System.out.println(dataBot.insert(test));
-            String sqlStatement = dataBot.insert(arguments[1]);
-            PreparedStatement prep = conn.prepareStatement(sqlStatement);
-            int count = 1;
-            for (Object entry : dataBot.getValues(arguments[1], dataBot.getFields(arguments[1]))){
-              if (entry instanceof Integer){
-                prep.setInt(count, (Integer)entry);
-                count = count + 1;
-              }
-              else if (entry instanceof String){
-                prep.setString(count, (String)entry);
-                count = count + 1;
-              }
-            }
-            prep.addBatch();
-            prep.executeBatch();
+            //System.out.println(dataBot.insert(test))
+            dataBot.insert(arguments[1]);
+
           }
 
-          else if (arguments[0].equals("DELETE")){
-            String sqlStatement = dataBot.delete(arguments[1]);
-            PreparedStatement prep = conn.prepareStatement(sqlStatement);
-            int count = 1;
-            for (Object entry : dataBot.getValues(arguments[1], dataBot.getFields(arguments[1]))){
-              if (entry instanceof Integer){
-                prep.setInt(count, (Integer)entry);
-                count = count + 1;
-              }
-              else if (entry instanceof String){
-                prep.setString(count, (String)entry);
-                count = count + 1;
-              }
-            }
-            prep.executeUpdate();
+          if (arguments[0].equals("DELETE")) {
+            dataBot.delete(arguments[1]);
           }
 
-          else if (arguments[0].equals("SELECT")){
+
+          if (arguments[0].equals("SELECT")) {
             List<?> objLs = dataBot.select(arguments[1], Arrays.asList(arguments).subList(2,
                 arguments.length));
+            int length = objLs.size();
+            System.out.printf("%d objects printed", length);
+          }
+          if (arguments[0].equals("UPDATE")) {
             System.out.println("");
           }
-          else if (arguments[0].equals("UPDATE")){
+          if (arguments[0].equals("RAWQUERY")) {
             System.out.println("");
           }
-          else if (arguments[0].equals("RAWQUERY")){
-            System.out.println("");
-          }
-
-
 
 
           // users
@@ -339,7 +314,7 @@ public final class Main {
 
             //Class.forName("org.sqlite.JDBC");
             //String urlToDB = "jdbc:sqlite:" + arguments[1];
-            //Connection conn = DriverManager.getConnection(urlToDB);
+            Connection conn = DataBot.getConnection();
             //Statement stat = conn.createStatement();
             //stat.executeUpdate("PRAGMA foreign_keys=ON;");
 
@@ -509,20 +484,30 @@ public final class Main {
               }
             }
           }
-          else {
-            throw new Exception();
-          }
+        } catch (SQLException throwables) {
+          throwables.printStackTrace();
+        } catch (IOException e) {
+          e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+          e.printStackTrace();
+        } catch (InvocationTargetException e) {
+          e.printStackTrace();
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+          e.printStackTrace();
+        } catch (InstantiationException e) {
+          e.printStackTrace();
         } catch (Exception e) {
-          // e.printStackTrace();
-          System.out.println("ERROR: We couldn't process your input");
+          e.printStackTrace();
+          System.out.println("ERROR: Invalid input for REPL");
         }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.out.println("ERROR: Invalid input for REPL");
     }
-
   }
+
+
+
 
   private static FreeMarkerEngine createEngine() {
     Configuration config = new Configuration(Configuration.VERSION_2_3_0);
@@ -539,7 +524,7 @@ public final class Main {
     return new FreeMarkerEngine(config);
   }
 
-  private void runSparkServer(int port) {
+    private void runSparkServer(int port) {
     // set port to run the server on
     Spark.port(port);
 

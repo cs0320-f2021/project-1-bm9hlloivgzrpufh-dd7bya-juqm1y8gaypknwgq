@@ -1,6 +1,5 @@
 package edu.brown.cs.student.main;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
@@ -8,42 +7,52 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DataBot {
   private static Connection conn;
-  public static void loadDb(String argument) throws ClassNotFoundException, SQLException {
+
+  public static void loadDb(String path) throws ClassNotFoundException, SQLException {
     ResultSet rs = null;
-    try{
-    Class.forName("org.sqlite.JDBC");
-    String urlToDB = "jdbc:sqlite:" + argument;
-    Connection conn = DriverManager.getConnection(urlToDB);
-    Statement stat = conn.createStatement();
-    stat.executeUpdate("PRAGMA foreign_keys=ON;");
-    String[] tablenames = {"user", "rent", "review"};
-    DatabaseMetaData dmd = conn.getMetaData();
-    for (String name : tablenames) {
-      rs = dmd.getTables(null, null, name, null);
-      if (!rs.next()) {
-        System.out.println("database invalid");
+    try {
+      Class.forName("org.sqlite.JDBC");
+      String urlToDB = "jdbc:sqlite:" + path;
+      Connection conn = DriverManager.getConnection(urlToDB);
+      Statement stat = conn.createStatement();
+      stat.executeUpdate("PRAGMA foreign_keys=ON;");
+      String[] tablenames = {"user", "rent", "review"};
+      DatabaseMetaData dmd = conn.getMetaData();
+      for (String name : tablenames) {
+        rs = dmd.getTables(null, null, name, null);
+        if (!rs.next()) {
+          System.out.println("database invalid");
+        }
       }
+      rs.close();
+    } catch (ClassNotFoundException | SQLException e) {
+      System.out.println("database not found");
     }
-    rs.close();}
-   catch (ClassNotFoundException | SQLException e) {
-    System.out.println("database not found");
   }
-}
+
+  public static Connection getConnection() {
+    return conn;
+  }
 
   public Class<?> getClass(String str) throws ClassNotFoundException {
-    Class<?> myClass = Class.forName("edu.brown.cs.student.main."+str);
+    Class<?> myClass = Class.forName("edu.brown.cs.student.main." + str);
     return myClass;
   }
-  public Field[] getFields(Class<?> objectClass) throws ClassNotFoundException {
-    Field[] fieldNames= objectClass.getDeclaredFields();
+
+  public Field[] getFields(Object obj) throws ClassNotFoundException {
+    Field[] fieldNames = obj.getClass().getDeclaredFields();
     return fieldNames;
   }
 
@@ -61,6 +70,7 @@ public class DataBot {
     String[] values = new String[fieldNames.length];
     int counter = 0;
     for (Field field : fieldNames) {
+      field.setAccessible(true);
       values[counter] = field.get(object).toString();
       counter++;
     }
@@ -72,64 +82,142 @@ public class DataBot {
     return object.getClass().getSimpleName();
   }
 
-  public String insert(String str) throws ClassNotFoundException {
-    Field[] fields = getFields(getClass(str));
+  public void insert(Object obj)
+      throws ClassNotFoundException, SQLException, IllegalAccessException {
+    Field[] fields = getFields(obj);
     int numFields = fields.length;
-    String sqlStatement = "INSERT INTO " + str + " VALUES (";
+    String sqlStatement = "INSERT INTO " + getType(obj) + " VALUES (";
     int counter = 0;
-    while (counter < (numFields - 1)){
+    while (counter < (numFields - 1)) {
       sqlStatement = sqlStatement + "?, ";
       counter = counter + 1;
     }
     sqlStatement = sqlStatement + "?);";
 
-    return sqlStatement;
+    PreparedStatement prep = conn.prepareStatement(sqlStatement);
+    int count = 1;
+    for (Object entry : getValues(obj, getFields(obj))) {
+      if (entry instanceof Integer) {
+        prep.setInt(count, (Integer) entry);
+        count = count + 1;
+      } else if (entry instanceof String) {
+        prep.setString(count, (String) entry);
+        count = count + 1;
+      }
+    }
+    prep.addBatch();
+    prep.executeBatch();
   }
 
-  public String delete(String str) throws ClassNotFoundException {
-    String[] fields = convertFields(getFields(getClass(str)));
+  public void delete(Object obj) throws ClassNotFoundException, SQLException,
+      IllegalAccessException {
+    String[] fields = convertFields(getFields(obj));
     int numFields = fields.length;
-    String sqlStatement = "DELETE FROM " + str + " WHERE ";
+    String sqlStatement = "DELETE FROM " + getType(obj) + " WHERE ";
     int counter = 0;
-    while (counter < (numFields - 1)){
+    while (counter < (numFields - 1)) {
       sqlStatement = sqlStatement + fields[counter] + " = ? AND ";
       counter = counter + 1;
     }
     sqlStatement = sqlStatement + fields[numFields - 1] + " = ?";
-    return sqlStatement;
+    PreparedStatement prep = conn.prepareStatement(sqlStatement);
+    int count = 1;
+    for (Object entry : getValues(obj, getFields(obj))) {
+      if (entry instanceof Integer) {
+        prep.setInt(count, (Integer) entry);
+        count = count + 1;
+      } else if (entry instanceof String) {
+        prep.setString(count, (String) entry);
+        count = count + 1;
+      }
+    }
+    prep.executeUpdate();
   }
 
-  public List<?> select(String u_class, List<String> conditions)
+  public List<Object> select(String u_class, List<String> conditions)
       throws SQLException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
       InstantiationException, IllegalAccessException {
     Class<?> clas = getClass(u_class);
     List<Field> classFields = Arrays.asList(getFields(clas));
-    for(Field field: classFields) {
+    for (Field field : classFields) {
       field.setAccessible(true);
     }
     List<Object> objList = new ArrayList<>();
     String sqlStatement = "SELECT * FROM " + u_class + " WHERE ";
-    for(int i=0; i<conditions.size(); i+=2){
-      sqlStatement += conditions.get(i) + " = " + conditions.get(i+1);
+    for (int i = 0; i < conditions.size(); i += 2) {
+      sqlStatement += conditions.get(i) + " = " + conditions.get(i + 1);
     }
     PreparedStatement ps = conn.prepareStatement(sqlStatement);
     ResultSet rs = ps.executeQuery();
     while (rs.next()) {
       Object obj = clas.getConstructor().newInstance();
-      for (Field field:classFields) {
+      for (Field field : classFields) {
         String fieldName = field.getName();
-          String value = rs.getString(fieldName);
-          field.set(obj, field.getType().getConstructor(String.class).newInstance(value));
+        Object value;
+        if (field.getType().isAssignableFrom(int.class)) {
+          value = rs.getInt(fieldName);
+        } else {
+          value = rs.getString(fieldName);
+        }
+        field.set(obj, value);
+        objList.add(obj);
       }
-      objList.add(obj);
     }
     return objList;
   }
-  void update(String u_class, String field, String update) {
-    
-  }
-  void rawQuery(){
 
+  void update(Object obj, String tableName, String field, String val)
+      throws SQLException, ClassNotFoundException, IllegalAccessException {
+
+    String sqlStatement = "UPDATE " + tableName + " SET " + field + " = " + val +
+        "WHERE ";
+    Map<String, String> mapFields = new HashMap<>();
+    Field[] fields = getFields(obj);
+    for (Field f: fields){
+      f.setAccessible(true);
+      mapFields.put(f.getName(), f.get(obj).toString());
+    }
+    for (String fieldName: mapFields.keySet()){
+      sqlStatement += fieldName + " = " + mapFields.get(fieldName);
+    }
+    PreparedStatement ps = conn.prepareStatement(sqlStatement);
+    ps.executeUpdate();
+
+    conn.close();
+    }
+
+  void rawQuery(String rawStatement) throws SQLException {
+    PreparedStatement ps = conn.prepareStatement(rawStatement);
+    String[] raw = rawStatement.trim().split(" ");
+    int type;
+    if (raw[0].equals("SELECT")) {
+      ResultSet set = ps.executeQuery();
+      ResultSetMetaData rsmd = set.getMetaData();
+      int columnCount = rsmd.getColumnCount();
+      while(set.next()){
+        String result = "";
+        for (int i = 0; i<columnCount; i++){
+          type= rsmd.getColumnType(i);
+          if (type == Types.INTEGER) {
+            int intVal = set.getInt(i);
+            result += intVal + " ";
+          }
+          else {
+            String stringVal = set.getString(i);
+            result += stringVal + " ";
+          }
+        }
+        System.out.printf(result);
+      }
+    }
+    else if (raw[0].equals("insert")){
+      ps.addBatch();
+      ps.executeBatch();
+    }
+    else {
+      ps.executeUpdate();
+    }
+    ps.close();
   }
 
 }
