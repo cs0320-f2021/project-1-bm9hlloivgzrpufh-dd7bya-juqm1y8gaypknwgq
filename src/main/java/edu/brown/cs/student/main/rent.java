@@ -1,6 +1,6 @@
 package edu.brown.cs.student.main;
 
-public class Rent {
+public class rent {
   private String fit;
   private int user_id;
   private int item_id;
@@ -10,7 +10,7 @@ public class Rent {
   private String size;
   private int id;
 
-  public Rent(String fit, int user_id, int item_id, int rating, String rented_for, String category,
+  public rent(String fit, int user_id, int item_id, int rating, String rented_for, String category,
               String size, int id){
     this.fit = fit;
     this.user_id = user_id;
