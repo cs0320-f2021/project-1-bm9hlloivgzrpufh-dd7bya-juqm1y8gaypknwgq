@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DataBot {
   private static Connection conn;
@@ -140,7 +141,7 @@ public class DataBot {
       throws SQLException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
       InstantiationException, IllegalAccessException {
     Class<?> clas = getClass(u_class);
-    List<Field> classFields = Arrays.asList(getFields(clas));
+    List<Field> classFields = Arrays.asList(clas.getDeclaredFields());
     for (Field field : classFields) {
       field.setAccessible(true);
     }
@@ -162,8 +163,9 @@ public class DataBot {
           value = rs.getString(fieldName);
         }
         field.set(obj, value);
-        objList.add(obj);
+
       }
+      objList.add(obj);
     }
     return objList;
   }
@@ -172,23 +174,29 @@ public class DataBot {
       throws SQLException, ClassNotFoundException, IllegalAccessException {
 
     String sqlStatement = "UPDATE " + tableName + " SET " + field + " = " + val +
-        "WHERE ";
+        " WHERE ";
     Map<String, String> mapFields = new HashMap<>();
     Field[] fields = getFields(obj);
     for (Field f: fields){
       f.setAccessible(true);
       mapFields.put(f.getName(), f.get(obj).toString());
     }
-    for (String fieldName: mapFields.keySet()){
-      sqlStatement += fieldName + " = " + mapFields.get(fieldName);
+    Set<String> keySet = mapFields.keySet();
+    List<String> mainList = new ArrayList<String>();
+    mainList.addAll(keySet);
+    for (int i =0; i<mainList.size(); i++) {
+      sqlStatement += mainList.get(i) + " = " + "'" + mapFields.get(mainList.get(i)) + "'";
+      if (i < mainList.size() - 1) {
+        sqlStatement += " and ";
+      }
     }
+//    System.out.println(sqlStatement);
     PreparedStatement ps = conn.prepareStatement(sqlStatement);
     ps.executeUpdate();
-
-    conn.close();
     }
 
   void rawQuery(String rawStatement) throws SQLException {
+    System.out.println(rawStatement);
     PreparedStatement ps = conn.prepareStatement(rawStatement);
     String[] raw = rawStatement.trim().split(" ");
     int type;
@@ -196,9 +204,12 @@ public class DataBot {
       ResultSet set = ps.executeQuery();
       ResultSetMetaData rsmd = set.getMetaData();
       int columnCount = rsmd.getColumnCount();
+//      if (set == null){
+//        System.out.println("no such row");
+//      }
       while(set.next()){
         String result = "";
-        for (int i = 0; i<columnCount; i++){
+        for (int i = 1; i<columnCount+1; i++){
           type= rsmd.getColumnType(i);
           if (type == Types.INTEGER) {
             int intVal = set.getInt(i);
@@ -209,17 +220,12 @@ public class DataBot {
             result += stringVal + " ";
           }
         }
-        System.out.printf(result);
+        System.out.println(result);
       }
-    }
-    else if (raw[0].equals("insert")){
-      ps.addBatch();
-      ps.executeBatch();
     }
     else {
       ps.executeUpdate();
     }
-    ps.close();
   }
 
 }

@@ -312,12 +312,13 @@ public final class Main {
           }
           else if (arguments[0].equals("UPDATE")) {
             dataBot.update(small,arguments[1], arguments[2], arguments[3]);
-            pw.println("updated");
+            pw.println("update finished");
           }
           else if (arguments[0].equals("RAWQUERY")) {
-            
-            //dataBot.rawQuery(sqlStatement);
-            pw.println("rawQuery");
+            List<String> ls = Arrays.asList(arguments).subList(1, arguments.length);
+            String sqlStatement = String.join(" ",ls);
+            dataBot.rawQuery(sqlStatement);
+            pw.println("rawQuery finished");
           }
 
 
@@ -329,7 +330,7 @@ public final class Main {
 
             Connection conn = DataBot.getConnection();
 
-            PreparedStatement prep = conn2.prepareStatement(
+            PreparedStatement prep = conn.prepareStatement(
                 "SELECT user_id, weight, height, age, horoscope FROM users;");
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {

@@ -9,7 +9,7 @@ public class rent {
   private String category;
   private String size;
   private int id;
-
+  public rent(){};
   public rent(String fit, int user_id, int item_id, int rating, String rented_for, String category,
               String size, int id){
     this.fit = fit;
