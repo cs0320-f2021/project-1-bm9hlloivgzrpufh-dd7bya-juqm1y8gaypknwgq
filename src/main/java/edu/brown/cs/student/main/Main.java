@@ -86,7 +86,6 @@ public final class Main {
         try {
           input = input.trim();
           String[] arguments = input.split(" ");
-
           // add
           if (arguments[0].equals("add")) {
             MathBot bot = new MathBot();
@@ -278,18 +277,30 @@ public final class Main {
 
 
           DataBot dataBot = new DataBot();
+          Rent small = new Rent("small", 1, 135, 4, "some_event",
+              "dress", "huge", 4);
+          Rent fit = new Rent("fit", 2, 135, 4, "some_event",
+              "dress", "huge", 4);
+          Rent large = new Rent("large", 3, 135, 4, "some_event",
+              "dress", "huge", 4);
+          Rent delete = new Rent("delete", 4, 135, 4, "some_event",
+              "dress", "huge", 4);
+          PrintWriter pw = new PrintWriter(System.out, true);
           if (arguments[0].equals("database")) {
             DataBot.loadDb(arguments[1]);
+            pw.println("database loaded");
           }
           if (arguments[0].equals("INSERT")) {
-            //Rent test = new Rent("small", 0, 135, 4, "some_event", "dress", "huge", 4);
             //System.out.println(dataBot.insert(test))
-            dataBot.insert(arguments[1]);
-
+            dataBot.insert(small);
+            dataBot.insert(fit);
+            dataBot.insert(large);
+            pw.println("inserted");
           }
 
           if (arguments[0].equals("DELETE")) {
-            dataBot.delete(arguments[1]);
+            dataBot.delete(delete);
+            pw.println("deleted");
           }
 
 
@@ -297,13 +308,16 @@ public final class Main {
             List<?> objLs = dataBot.select(arguments[1], Arrays.asList(arguments).subList(2,
                 arguments.length));
             int length = objLs.size();
-            System.out.printf("%d objects printed", length);
+            pw.println(length);
           }
           if (arguments[0].equals("UPDATE")) {
-            System.out.println("");
+            dataBot.update(small,arguments[1], arguments[2], arguments[3]);
+            pw.println("updated");
           }
           if (arguments[0].equals("RAWQUERY")) {
-            System.out.println("");
+            
+            dataBot.rawQuery(sqlStatement);
+            pw.println("rawQuery");
           }
 
 
