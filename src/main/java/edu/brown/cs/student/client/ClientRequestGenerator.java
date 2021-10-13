@@ -27,4 +27,22 @@ public class ClientRequestGenerator {
               .build();
     return request;
   }
+
+
+  /**
+   * Similar to the secured GET request, but is a POST request instead.
+   *
+   * @return an HttpRequest object for accessing and posting to the secured resource.
+   */
+  public static HttpRequest getSecuredPostRequest() {
+    String reqUri = "https://runwayapi.herokuapp.com/integration";
+    ClientAuth clientAuth = new ClientAuth();
+    String apiKey = clientAuth.getApiKey();
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(reqUri)) //set uri
+        .header("x-api-key",apiKey)
+        .POST(HttpRequest.BodyPublishers.ofString(" {\"auth\": \"jchu17\"}"))
+        .build();
+    return request;
+  }
 }
