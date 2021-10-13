@@ -74,8 +74,8 @@ public final class Main {
     }
 
     // CHANGE REPL OBJECT TO AN OBJECT THAT INCLUDES DESIRED COMMANDS
-    REPL repl = new REPL(new REPLProj1());
-    repl.start("start REPL " + "proj1");
+    REPL repl = new REPL(new REPLProj1Sprint());
+    repl.start("start REPL " + "proj1Spring");
   }
 
 

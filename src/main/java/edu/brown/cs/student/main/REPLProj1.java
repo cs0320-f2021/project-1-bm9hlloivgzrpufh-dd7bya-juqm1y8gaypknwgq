@@ -30,18 +30,23 @@ public class REPLProj1 implements REPLInterface{
     this.commandsList.add("classify");
   }
 
+  @Override
   public void parse(String[] arguments) throws Exception {
 
-
     DataBot dataBot = new DataBot();
-    rent small = new rent("small", 1, 135, 4, "some_event",
-        "dress", "huge", 1);
-    rent fit = new rent("fit", 2, 132, 4, "some_event",
-        "dress", "huge", 2);
-    rent large = new rent("large", 3, 131, 4, "some_event",
-        "dress", "huge", 3);
-    rent delete = new rent("delete", 4, 139, 4, "some_event",
-        "dress", "huge", 4);
+
+    Rent small = new Rent();
+    Rent fit = new Rent();
+    Rent large = new Rent();
+    Rent delete = new Rent();
+    //rent small = new rent("small", 1, 135, 4, "some_event",
+    //    "dress", "huge", 1);
+    //rent fit = new rent("fit", 2, 132, 4, "some_event",
+    //    "dress", "huge", 2);
+    //rent large = new rent("large", 3, 131, 4, "some_event",
+    //   "dress", "huge", 3);
+    //rent delete = new rent("delete", 4, 139, 4, "some_event",
+    //    "dress", "huge", 4);
     PrintWriter pw = new PrintWriter(System.out, true);
 
     if (commandsList.contains(arguments[0])) {

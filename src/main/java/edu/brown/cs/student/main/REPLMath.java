@@ -11,6 +11,7 @@ public class REPLMath implements REPLInterface{
     this.commandsList.add("subtract");
   }
 
+  @Override
   public void parse(String[] arguments) throws Exception {
     if (commandsList.contains(arguments[0])) {
       if (arguments[0].equals("add")) {

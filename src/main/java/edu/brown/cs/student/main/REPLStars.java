@@ -16,6 +16,7 @@ public class REPLStars implements REPLInterface{
     this.commandsList.add("naive_neighbors");
   }
 
+  @Override
   public void parse(String[] arguments) throws Exception {
 
     if (commandsList.contains(arguments[0])) {

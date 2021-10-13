@@ -208,7 +208,7 @@ public class Database {
       counter += 1;
       params.add(queryParams.get(key));
       if (counter != keys.size()) {
-        wheres += (key + "=? AND");
+        wheres += (key + "=? AND ");
       } else {
         wheres += (key + "=?");
       }
@@ -243,5 +243,52 @@ public class Database {
     return output;
   }
 
+
+  /**
+   * Selects and returns a list of all objects from the database
+   *
+   * @param <T>         the type of the object we wish to return.
+   * @param c           the class of the object that we are returning.
+   * @return a list of objects as retrieved from the database.
+   * @throws SQLException
+   * @throws InstantiationException
+   * @throws IllegalAccessException
+   * @throws IllegalArgumentException
+   * @throws InvocationTargetException
+   * @throws NoSuchMethodException
+   * @throws SecurityException
+   */
+  public <T> List<T> selectAll(Class<T> c) throws SQLException,
+      InstantiationException, IllegalAccessException, IllegalArgumentException,
+      InvocationTargetException, NoSuchMethodException, SecurityException {
+    String tableName = c.getSimpleName().toLowerCase();
+
+    String sql = "SELECT * FROM " + tableName + ";";
+    System.out.println(sql);
+    return sqlListQueryAll(c, sql);
+  }
+
+  private <T> List<T> sqlListQueryAll(Class<T> c, String sql) throws
+      SQLException, InstantiationException, IllegalAccessException, IllegalArgumentException,
+      InvocationTargetException, NoSuchMethodException, SecurityException {
+    PreparedStatement prep = conn.prepareStatement(sql);
+    List<T> output = new ArrayList<>();
+    ResultSet res = prep.executeQuery();
+    Field[] attributes = c.getDeclaredFields();
+    Map<String, String> mapper = new HashMap<>();
+
+    while (res.next()) {
+      for (Field field : attributes) {
+        field.setAccessible(true);
+        String fieldName = field.getName();
+        int column = res.findColumn(fieldName);
+        mapper.put(fieldName, res.getString(column));
+      }
+      T node = (T) (c.getDeclaredConstructor(Map.class).newInstance(mapper));
+      output.add(node);
+    }
+    System.out.println(output.size());
+    return output;
+  }
 
 }
