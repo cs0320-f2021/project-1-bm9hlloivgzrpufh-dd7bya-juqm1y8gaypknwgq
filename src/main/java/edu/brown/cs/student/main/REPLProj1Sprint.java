@@ -1,6 +1,7 @@
 package edu.brown.cs.student.main;
 
 import edu.brown.cs.student.bloomfilter.AndSimilarityComparator;
+import edu.brown.cs.student.bloomfilter.BloomFilter;
 import edu.brown.cs.student.bloomfilter.BloomFilterRecommender;
 import edu.brown.cs.student.client.ApiClient;
 import edu.brown.cs.student.client.ClientRequestGenerator;
@@ -20,6 +21,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.lang.Math.ceil;
 
 public class REPLProj1Sprint implements REPLInterface{
   private final List<String> commandsList = new LinkedList<String>();
@@ -289,7 +292,7 @@ public class REPLProj1Sprint implements REPLInterface{
 
       } else if(arguments[0].equals("recsys_rec")) {
         int numberOfRecs = Integer.parseInt(arguments[1]);
-        int allDataSize = allData.size();
+        int allDataSize = allData.size() - 1;
         int targetID = Integer.parseInt(arguments[2]);
         StudentQuant targetQuantAttr = (StudentQuant) allData.get(targetID)[1];
         StudentQual targetQualAttr = (StudentQual) allData.get(targetID)[0];
@@ -301,26 +304,27 @@ public class REPLProj1Sprint implements REPLInterface{
         Node<Coordinate<Integer>> studentRoot = studentTree.getRoot();
         KdTreeSearch<Integer> treeSearch = new KdTreeSearch<Integer>();
         List<Coordinate<Integer>> quantComps = treeSearch.getNearestNeighborsResult(
-            allDataSize, targetQuantAttr, studentRoot, false);
+            allDataSize, targetQuantAttr, studentRoot, true);
 
         for (int i=0; i < allDataSize; i++) {
           kdTreeResults.put(quantComps.get(i).getId().toString(), i);
         }
 
-        /*
+        double r = 0.01;
+        int k = (int) Math.round(ceil(-1 * (Math.log(r) / Math.log(2))));
+        double m = ceil((k * allDataSize) / Math.log(2));
         BloomFilterRecommender<StudentQual> studentBloom = new BloomFilterRecommender<StudentQual>(
-            this.studentQual, .01);
-        studentBloom.setBloomFilterComparator();
+            this.studentQual, r);
+        studentBloom.setBloomFilterComparator(new AndSimilarityComparator(new BloomFilter<String>(m, allDataSize, k)));
         List<StudentQual> qualComps = studentBloom.getTopKRecommendations(targetQualAttr, allDataSize);
 
         for (int i=0; i < allDataSize; i++) {
           String relevantID = qualComps.get(i).getId();
           allResults.put(relevantID, i + kdTreeResults.get(relevantID));
         }
-         */
 
-        // change to allResults
-        Set<Entry<String,Integer>> entries = kdTreeResults.entrySet();
+
+        Set<Entry<String,Integer>> entries = allResults.entrySet();
         List<Entry<String,Integer>> sortedEntries = new ArrayList<>(entries);
         Collections.sort(sortedEntries, new Comparator<Entry<String, Integer>>()
         {
@@ -335,10 +339,6 @@ public class REPLProj1Sprint implements REPLInterface{
           StudentQuant finalStudent = (StudentQuant) allData.get(finalID)[1];
           System.out.println(finalStudent.getId());
         }
-
-
-        System.out.println("stop");
-
       }
     } else {
         throw new Exception("No such command");
