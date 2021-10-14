@@ -1,5 +1,6 @@
 package edu.brown.cs.student.main;
 
+import edu.brown.cs.student.bloomfilter.AndSimilarityComparator;
 import edu.brown.cs.student.bloomfilter.BloomFilterRecommender;
 import edu.brown.cs.student.client.ApiClient;
 import edu.brown.cs.student.client.ClientRequestGenerator;
@@ -10,10 +11,13 @@ import edu.brown.cs.student.orm.Database;
 import edu.brown.cs.student.searchAlgorithms.KdTreeSearch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +30,7 @@ public class REPLProj1Sprint implements REPLInterface{
   private final HashMap<String, StudentQual> studentQual = new HashMap<String, StudentQual>();
 
   REPLProj1Sprint() {
-    this.commandsList.add("test");
+    this.commandsList.add("recsys_load");
     this.commandsList.add("recsys_rec");
     this.commandsList.add("recsys_gen_groups");
   }
@@ -35,7 +39,7 @@ public class REPLProj1Sprint implements REPLInterface{
   @Override
   public void parse(String[] arguments) throws Exception {
     if (commandsList.contains(arguments[0])) {
-      if (arguments[0].equals("test")) {
+      if (arguments[0].equals("recsys_load")) {
 
         Database responsesDB = new Database("C:\\Users\\jchu4\\CSCI0320\\project-1-bm9hlloivgzrpufh-dd7bya-juqm1y8gaypknwgq\\data\\project-1\\integration.sqlite3");
         Interests interestsTable = new Interests();
@@ -155,44 +159,14 @@ public class REPLProj1Sprint implements REPLInterface{
           }
         }
 
-        // utilized for testing
-        /*
-        for (int i=1; i<5; i++) {
-          StudentQual oneStudentQual = (StudentQual) allData.get(i)[0];
-          StudentQuant oneStudentQuant = (StudentQuant) allData.get(i)[1];
-
-          System.out.println(oneStudentQual.getVectorRepresentation());
-
-          System.out.println(oneStudentQuant.getId());
-          System.out.println(oneStudentQuant.getName());
-          System.out.println(oneStudentQuant.getCommenting());
-          System.out.println(oneStudentQuant.getTesting());
-          System.out.println(oneStudentQuant.getOOP());
-          System.out.println(oneStudentQuant.getAlgorithms());
-          System.out.println(oneStudentQuant.getTeamwork());
-          System.out.println(oneStudentQuant.getFrontend());
-          System.out.println(oneStudentQuant.getYearsofExperience());
-        }
-        */
-
-
         ApiClient client = new ApiClient();
         String data = client.makeRequest(ClientRequestGenerator.getSecuredPostRequest());
-        //System.out.println(data);
 
         data = data.substring(1, data.length() - 1);
         data = data.concat(", ");
         String[] allQualData = data.split("}, ");
-        //System.out.println(allQualData.length);
-        //System.out.println(allQualData[0]);
-        //System.out.println(allQualData[1]);
-        //System.out.println(allQualData[2]);
-        //System.out.println(allQualData[allQualData.length - 1]);
-
 
         for (String oneStudentQual: allQualData) {
-          //oneStudentQual = oneStudentQual.substring(1, oneStudentQual.length());
-
           List<String> oneStudentQualClean = new LinkedList<String>();
 
           Pattern p = Pattern.compile("\"(.*?)\"");
@@ -305,37 +279,68 @@ public class REPLProj1Sprint implements REPLInterface{
           }
         }
 
+        for (Integer key: allData.keySet()) {
+          studentQual.put(key.toString(), (StudentQual) allData.get(key)[0]);
+          studentQuant.add((StudentQuant) allData.get(key)[1]);
+        }
 
         int studentCount = allData.size();
         System.out.println("Loaded Recommender with " + studentCount + " students.");
 
-
-        // extra code trying to figure out given ORM code
-        //Database usersDB = new Database("C:\\Users\\jchu4\\CSCI0320\\project-1-bm9hlloivgzrpufh-dd7bya-juqm1y8gaypknwgq\\data\\project-1\\runwaySMALL.sqlite3");
-        //Rent rentTable = new Rent();
-        //Class<Rent> rentClass = (Class<Rent>) rentTable.getClass();
-        //
-        //List<Rent> allRentList = usersDB.selectAll(rentClass);
-        //for (Rent r: allRentList) {
-        //  System.out.println(r.getCategory());
-        //}
-
-
       } else if(arguments[0].equals("recsys_rec")) {
         int numberOfRecs = Integer.parseInt(arguments[1]);
-        //Coordinate<Integer> targetPoint = hashmap -> arguments[2]
+        int allDataSize = allData.size();
+        int targetID = Integer.parseInt(arguments[2]);
+        StudentQuant targetQuantAttr = (StudentQuant) allData.get(targetID)[1];
+        StudentQual targetQualAttr = (StudentQual) allData.get(targetID)[0];
+
+        HashMap<String, Integer> kdTreeResults = new HashMap<String, Integer>();
+        HashMap<String, Integer> allResults = new HashMap<String, Integer>();
 
         KdTree<Integer> studentTree = new KdTree<Integer>(7, studentQuant);
         Node<Coordinate<Integer>> studentRoot = studentTree.getRoot();
         KdTreeSearch<Integer> treeSearch = new KdTreeSearch<Integer>();
-        //List<Coordinate<Integer>> quantComps = treeSearch.getNearestNeighborsResult(
-        //    numberOfRecs, targetPoint, studentRoot, true);
+        List<Coordinate<Integer>> quantComps = treeSearch.getNearestNeighborsResult(
+            allDataSize, targetQuantAttr, studentRoot, false);
 
+        for (int i=0; i < allDataSize; i++) {
+          kdTreeResults.put(quantComps.get(i).getId().toString(), i);
+        }
+
+        /*
         BloomFilterRecommender<StudentQual> studentBloom = new BloomFilterRecommender<StudentQual>(
-            this.studentQual, .1);
-      }
+            this.studentQual, .01);
+        studentBloom.setBloomFilterComparator();
+        List<StudentQual> qualComps = studentBloom.getTopKRecommendations(targetQualAttr, allDataSize);
 
-      } else {
+        for (int i=0; i < allDataSize; i++) {
+          String relevantID = qualComps.get(i).getId();
+          allResults.put(relevantID, i + kdTreeResults.get(relevantID));
+        }
+         */
+
+        // change to allResults
+        Set<Entry<String,Integer>> entries = kdTreeResults.entrySet();
+        List<Entry<String,Integer>> sortedEntries = new ArrayList<>(entries);
+        Collections.sort(sortedEntries, new Comparator<Entry<String, Integer>>()
+        {
+          public int compare(Entry<String, Integer> o1,
+                             Entry<String, Integer> o2)
+          { return o1.getValue().compareTo(o2.getValue()); }
+        }
+        );
+
+        for (int i=0; i < numberOfRecs; i++) {
+          int finalID = Integer.parseInt(sortedEntries.get(i).getKey());
+          StudentQuant finalStudent = (StudentQuant) allData.get(finalID)[1];
+          System.out.println(finalStudent.getId());
+        }
+
+
+        System.out.println("stop");
+
+      }
+    } else {
         throw new Exception("No such command");
     }
   }
