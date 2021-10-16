@@ -6,20 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -72,10 +60,36 @@ public final class Main {
     if (options.has("gui")) {
       runSparkServer((int) options.valueOf("port"));
     }
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+      String input;
 
-    // CHANGE REPL OBJECT TO AN OBJECT THAT INCLUDES DESIRED COMMANDS
-    REPL repl = new REPL(new REPLProj1Sprint());
-    repl.start("start REPL " + "proj1Spring");
+      //hashMap of keyword to instance of command object
+      HashMap<String, CommandInterface> commandMap = new HashMap<>();
+
+      //add all commands to hashMap
+      CommandAdd commandAdd = new CommandAdd();
+      commandMap.put("add", commandAdd);
+
+      CommandSubtract commandSubtract = new CommandSubtract();
+      commandMap.put("subtract", commandSubtract);
+
+      CommandSprint commandSprint = new CommandSprint();
+      commandMap.put("recsys_load", commandSprint);
+      commandMap.put("recsys_rec", commandSprint);
+
+
+      while ((input = br.readLine()) != null) {
+        try {
+          input = input.trim();
+          String[] arguments = input.split(" ");
+
+          //get the command instance from the hashMap and execute runCommand
+          commandMap.get(arguments[0]).runCommand(arguments);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    }
   }
 
 
