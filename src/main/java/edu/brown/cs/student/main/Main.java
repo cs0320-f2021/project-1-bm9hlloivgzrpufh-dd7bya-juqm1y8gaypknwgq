@@ -76,6 +76,7 @@ public final class Main {
       CommandSprint commandSprint = new CommandSprint();
       commandMap.put("recsys_load", commandSprint);
       commandMap.put("recsys_rec", commandSprint);
+      commandMap.put("recsys_gen_groups", commandSprint);
 
 
       while ((input = br.readLine()) != null) {
